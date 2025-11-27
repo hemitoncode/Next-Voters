@@ -2,6 +2,7 @@
 
 import { promises as fs } from "fs";
 import path from "path";
+import { createCollection } from "@/lib/ai";    
 
 interface RegionData {
     code: string;
@@ -11,6 +12,7 @@ interface RegionData {
     type: string;
     parentRegionCode?: string;
 }
+
 
 const handleCreateRegion = async (data: RegionData) => {
     try {
@@ -56,7 +58,10 @@ const handleCreateRegion = async (data: RegionData) => {
             throw new Error(`Region with code "${code}" already exists`);
         }
 
-        // Add new region
+        // Create Qdrant collection
+        await createCollection(collectionName);
+        
+        // Add new region to the supported regions file
         existingRegions.push(newRegion);
 
         // Format the new file content
