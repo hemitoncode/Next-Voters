@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusMessage } from "@/components/status-message";
-import { inputFields } from "@/data/embed-pdf-fields";
+import ReusableSelect from "@/components/reusable-select";
 import handleCreateRegion from "@/server-actions/create-region";
+import supportedRegionDetails from "@/data/supported-regions";
 
 const initialForm = {
   code: "",
@@ -29,6 +30,13 @@ const CreateRegion = () => {
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSelectChange = (value: string, fieldName: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [fieldName]: value,
     }));
   };
 
@@ -66,26 +74,72 @@ const CreateRegion = () => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-lg bg-white shadow-md border border-slate-200">
         <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Embed PDF</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Create Region</h2>
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {inputFields.map((field) => (
-              <input
-                key={field.name}
-                name={field.name}
-                placeholder={field.value}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
-                value={form[field.name]}
-                onChange={handleChange}
-                required
+            <input
+              name="code"
+              placeholder="Region Code (e.g., US, CA, US-CA)"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
+              value={form.code}
+              onChange={handleChange}
+              required
+            />
+
+            <input
+              name="name"
+              placeholder="Region Name (e.g., United States, Canada)"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
+
+            <ReusableSelect
+              value={form.type}
+              onValueChange={(value) => handleSelectChange(value, "type")}
+              placeholder="Region Type"
+              items={["country", "sub-region"]}
+            />
+
+            {form.type === "sub-region" && (
+              <ReusableSelect
+                value={form.parentRegionCode}
+                onValueChange={(value) => handleSelectChange(value, "parentRegionCode")}
+                placeholder="Parent Region"
+                items={supportedRegionDetails.filter(r => r.type === "country").map(r => r.code)}
               />
-            ))}
+            )}
+
+            <input
+              name="collectionName"
+              placeholder="Collection Name (e.g., collection-us)"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
+              value={form.collectionName}
+              onChange={handleChange}
+              required
+            />
+
+            <input
+              name="politicalParties"
+              placeholder="Political Parties (comma-separated)"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
+              value={form.politicalParties.join(", ")}
+              onChange={(e) => {
+                const parties = e.target.value.split(",").map(p => p.trim()).filter(p => p);
+                setForm((prev) => ({
+                  ...prev,
+                  politicalParties: parties,
+                }));
+              }}
+              required
+            />
 
             <Button
               type="submit"
               disabled={mutation.isPending}
               className="w-full bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg py-2"
             >
-              {mutation.isPending ? <Spinner size="sm" className="text-white" /> : "Add Embeddings"}
+              {mutation.isPending ? <Spinner size="sm" className="text-white" /> : "Create Region"}
             </Button>
           </form>
 
