@@ -4,13 +4,30 @@ import { NextResponse, NextRequest } from "next/server";
 import { isUserAuthenticatedAndHasAdminRole } from "./lib/auth";
 
 export default async function middleware(req: NextRequest) {
-  if (protectedRegularRoutes.includes(req.nextUrl.pathname)) {
-    return withAuth(req);
+  const pathname = req.nextUrl.pathname;
+
+  // Check admin routes first
+  if (protectedAdminRoutes.includes(pathname)) {
+    try {
+      const isAdmin = await isUserAuthenticatedAndHasAdminRole(req);
+      if (!isAdmin) {
+        return NextResponse.redirect(new URL("/", req.url));
+      }
+    } catch (error) {
+      console.error("Admin auth check error:", error);
+      return NextResponse.redirect(new URL("/", req.url));
+    }
   }
 
-  if (protectedAdminRoutes.includes(req.nextUrl.pathname) && !await isUserAuthenticatedAndHasAdminRole(req)) {
-    const homeURL = new URL("/", req.url);
-    return NextResponse.redirect(homeURL);
+  // Check regular protected routes
+  if (protectedRegularRoutes.includes(pathname)) {
+    try {
+      return withAuth(req);
+    } catch (error) {
+      console.error("Auth middleware error:", error);
+      // Allow request to proceed if auth fails to prevent blocking
+      return NextResponse.next();
+    }
   }
 
   return NextResponse.next();
