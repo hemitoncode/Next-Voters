@@ -45,7 +45,7 @@ const CreateRegion = () => {
       return await handleCreateRegion({
         code: form.code,
         name: form.name,
-        politicalParties: JSON.stringify(form.politicalParties),
+        politicalParties: form.politicalParties,
         collectionName: form.collectionName,
         type: form.type,
         parentRegionCode: form.parentRegionCode
